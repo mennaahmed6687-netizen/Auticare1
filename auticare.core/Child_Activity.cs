@@ -12,9 +12,9 @@ namespace auticare.core
         [Key]
         public int ?child_activityId {  get; set; }
         public int ChildId {  get; set; }
-        public Child?Child { get; set; }    
+        public virtual Child?Child { get; set; }    
         public int ActivityId { get; set; }
-        public Activity?Activity { get; set; }
+        public virtual Activity?Activity { get; set; }
         
         public int Score { get; set; }
 

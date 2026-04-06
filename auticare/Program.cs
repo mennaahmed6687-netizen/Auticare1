@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AuticareDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("auticareContext") ?? throw new InvalidOperationException("Connection string 'AuticareDbContext' not found.")));
+    options.UseLazyLoadingProxies().UseSqlServer(builder.Configuration.GetConnectionString("auticareContext") ?? throw new InvalidOperationException("Connection string 'AuticareDbContext' not found.")));
 builder.Services.AddSingleton<IdataChild<Child>, UserEntity >();
 
 // Add services to the container.
@@ -15,7 +15,7 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddMvc(op => op.EnableEndpointRouting = false);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddNewtonsoftJson();
 
 
 builder.Services.AddControllers()

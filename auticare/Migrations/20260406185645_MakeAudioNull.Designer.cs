@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using auticare.Data;
 
@@ -11,9 +12,11 @@ using auticare.Data;
 namespace auticare.Migrations
 {
     [DbContext(typeof(AuticareDbContext))]
-    partial class AuticareDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260406185645_MakeAudioNull")]
+    partial class MakeAudioNull
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

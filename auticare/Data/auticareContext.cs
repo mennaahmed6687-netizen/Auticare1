@@ -9,6 +9,7 @@ namespace auticare.Data
 {
     public class AuticareDbContext : DbContext
     {
+        internal readonly IEnumerable<object> assessment;
         internal object Child_Activities;
 
         public AuticareDbContext (DbContextOptions<AuticareDbContext> options)
@@ -20,6 +21,7 @@ namespace auticare.Data
         public DbSet<auticare.core.Assessment> assessments{ get; set; } = default!;
         public DbSet<auticare.core.Parent> Parent { get; set; } = default!;
         public DbSet<auticare.core.Activity>Activities { get; set; } = default!;
+        public DbSet<auticare.core.ProgressReport> ProgressReports { get; set; } = default!;
 
     }
 }
