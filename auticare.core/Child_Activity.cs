@@ -9,6 +9,8 @@ namespace auticare.core
 {
     public class Child_Activity
     {
+        public level level;
+
         [Key]
         public int ?child_activityId {  get; set; }
         public int ChildId {  get; set; }
@@ -21,5 +23,7 @@ namespace auticare.core
         public int Attempts { get; set; }
 
         public int Duration { get; set; }
+        public string? ActivityName { get; set; }
+ 
     }
 }

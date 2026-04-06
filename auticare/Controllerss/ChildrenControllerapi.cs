@@ -30,7 +30,7 @@ namespace auticare.Controllerss
     string name,
     int age,
     Gender gender,
-    int parentId,
+    string parentId,
     [FromQuery] int[] activityIds // قائمة معرفات الأنشطة
 )
         {

@@ -1,117 +1,106 @@
 ﻿using auticare.core;
+using auticare.core.DTO;
 using auticare.Data;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
-namespace auticare.Controllerss
+
+[Route("api/[controller]")]
+[ApiController]
+public class ProgressReportController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class ProgressReportController : ControllerBase
+    private readonly AuticareDbContext _context;
+
+    public ProgressReportController(AuticareDbContext context)
     {
-        private readonly AuticareDbContext _context;
-
-        public ProgressReportController(AuticareDbContext context)
-        {
-            _context = context;
-        }
-
-        // ✅ Get all reports
-        [HttpGet]
-        public IActionResult Get()
-        {
-            var reports = _context.ProgressReports.ToList();
-            return Ok(reports);
-        }
-
-        // ✅ Get report by id
-        [HttpGet("{id}")]
-        public IActionResult Get(int id)
-        {
-            var report = _context.ProgressReports
-                .FirstOrDefault(r => r.Id == id);
-
-            if (report == null)
-                return NotFound();
-
-            return Ok(report);
-        }
-
-        // ✅ Get reports by child (🔥 الربط)
-        [HttpGet("child/{childId}")]
-        public IActionResult GetByChild(int childId)
-        {
-            var reports = _context.ProgressReports
-                .Where(r => r.ChildId == childId)
-                .ToList();
-
-            if (!reports.Any())
-                return NotFound("No reports for this child");
-
-            return Ok(reports);
-        }
-
-        // ✅ Add report
-        [HttpPost]
-        public IActionResult Post(ProgressReport report)
-        {
-            if (report == null)
-                return BadRequest();
-
-            _context.ProgressReports.Add(report);
-            _context.SaveChanges();
-
-            return Ok(report);
-        }
-
-        // ✅ Update
-        [HttpPut("{id}")]
-        public IActionResult Put(int id, ProgressReport updated)
-        {
-            var report = _context.ProgressReports
-                .FirstOrDefault(r => r.Id == id);
-
-            if (report == null)
-                return NotFound();
-
-            report.description = updated.description;
-            report.ChildId = updated.ChildId;
-
-            _context.SaveChanges();
-
-            return Ok("Updated Successfully");
-        }
-
-        // ✅ Delete
-        [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
-        {
-            var report = _context.ProgressReports
-                .FirstOrDefault(r => r.Id == id);
-
-            if (report == null)
-                return NotFound();
-
-            _context.ProgressReports.Remove(report);
-            _context.SaveChanges();
-
-            return Ok("Deleted Successfully");
-       
-        }
-        [HttpPatch("{id}")]
-        public IActionResult UpdateChildPatch([FromRoute] int id, [FromBody] JsonPatchDocument<ProgressReport> patchDoc)
-        {
-            var ProgressReport = _context.ProgressReports.FirstOrDefault(c => c.Id == id);
-
-            if (ProgressReport == null)
-                return NotFound("ProgressReports not found.");
-
-            patchDoc.ApplyTo(ProgressReport);
-
-            _context.SaveChanges();
-
-            return Ok(ProgressReport);
-        }
+        _context = context;
     }
+
+    // CREATE
+    [HttpPost]
+    public async Task<IActionResult> Create(ProgressReportDTO dto)
+    {
+        var parent = await _context.Parent
+            .Include(p => p.ProgressReport)
+            .FirstOrDefaultAsync(p => p.Id == dto.ParentId);
+
+        if (parent == null)
+            return NotFound("Parent not found");
+
+        if (parent.ProgressReport != null)
+            return BadRequest("Parent already has a ProgressReport");
+
+        var report = new ProgressReport
+        {
+            Report = dto.Report,
+            ParentId = (string)dto.ParentId,
+            RecommendedNextStep = (string)dto.RecommendedNextStep,
+            OverallProgress = (string)dto.OverallProgress
+        };
+
+        _context.ProgressReports.Add(report);
+        await _context.SaveChangesAsync();
+
+        return Ok(report);
+    }
+
+    // GET by ParentId
+    [HttpGet("parent/{parentId}")]
+    public async Task<IActionResult> GetByParent(string parentId)
+    {
+        var report = await _context.ProgressReports
+            .Where(r => r.ParentId == parentId)
+            .Select(r => new ProgressReportDTO
+            {
+                Id = r.Id,
+                Report = r.Report,
+                ParentId = r.ParentId,
+                RecommendedNextStep=r.RecommendedNextStep,
+                OverallProgress=r.OverallProgress
+            })
+            .FirstOrDefaultAsync();
+
+        if (report == null)
+            return NotFound();
+
+        return Ok(report);
+    }
+
+    // PUT (Full Update)
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, ProgressReportDTO dto)
+    {
+        var report = await _context.ProgressReports.FindAsync(id);
+
+        if (report == null)
+            return NotFound();
+
+        report.Report = dto.Report;
+
+        await _context.SaveChangesAsync();
+
+        return Ok(report);
+    }
+
+    // PATCH (Partial Update)
+    [HttpPatch("{id}")]
+    public async Task<IActionResult> Patch(int id, JsonPatchDocument<ProgressReport> patchDoc)
+    {
+        if (patchDoc == null)
+            return BadRequest();
+
+        var report = await _context.ProgressReports.FindAsync(id);
+
+        if (report == null)
+            return NotFound();
+
+        patchDoc.ApplyTo(report, ModelState);
+
+        if (!ModelState.IsValid) 
+            return BadRequest();
+        await _context.SaveChangesAsync();
+        return Ok(report);
+
+            }
 }
+

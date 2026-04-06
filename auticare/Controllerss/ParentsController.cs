@@ -23,10 +23,10 @@ public class ParentsController : ControllerBase
     {
         var parent = new Parent
         {
-            Name = name,
+            UserName = name,
             Email = email,
             Phone = phone,
-            Password = password
+        
         };
 
         _context.Set<Parent>().Add(parent);
@@ -35,14 +35,14 @@ public class ParentsController : ControllerBase
         return Ok(new
         {
             parent.ParentId,
-            parent.Name,
+            parent.UserName,
             parent.Email,
             parent.Phone
         });
     }
     // ================= GET =================
     [HttpGet("{id}")]
-    public IActionResult GetParent([FromQuery] int id)
+    public IActionResult GetParent([FromQuery] string id)
     {
         var parent = _context.Parent
             .FirstOrDefault(p => p.ParentId == id);
@@ -60,14 +60,14 @@ public class ParentsController : ControllerBase
 
     // ================= PUT =================
     [HttpPut("{id}")]
-    public IActionResult UpdateParent(int id, [FromBody] string newName)
+    public IActionResult UpdateParent(string id, [FromBody] string newName)
     {
         var parent = _context.Parent.FirstOrDefault(p => p.ParentId == id);
 
         if (parent == null)
             return NotFound("Parent not found.");
 
-        parent.Name = newName;
+        parent.UserName = newName;
 
         _context.SaveChanges();
 
@@ -75,7 +75,7 @@ public class ParentsController : ControllerBase
     }
     // ================= DELETE =================
     [HttpDelete("{id}")]
-    public IActionResult DeleteParent(int id)
+    public IActionResult DeleteParent(string id)
     {
         var parent = _context.Parent
             .Include(p => p.children)

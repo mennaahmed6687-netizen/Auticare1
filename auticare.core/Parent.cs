@@ -4,26 +4,23 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
+using Microsoft.AspNetCore.Identity;
 namespace auticare.core
 {
-    public class Parent
+    public class Parent : IdentityUser
     {
-
-
         [Key]
-        public int ParentId { get; set; }
+        public string ParentId { get; set; }
+
+        [Required]
+        public string Name { get; set; }  // مهم
+
         [Required]
         [RegularExpression(@"^01[0-9]{9}$", ErrorMessage = "Invalid phone number")]
         public string Phone { get; set; }
 
-        [Required]
-        [EmailAddress]
-        public required string Email { get; set; }
-        public required string Name { get; set; }
-        public required string Password { get; set; }
         public DateTime Created { get; set; } = DateTime.Now;
         public virtual List<Child>? children { get; set; } = new List<Child>();
-
+        public virtual ProgressReport ProgressReport { get; set; }
     }
 }

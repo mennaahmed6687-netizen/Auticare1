@@ -32,7 +32,7 @@ namespace auticare.core
 
         public DiagnosisLevel Diagnosis_Level { get; set; }
         public virtual ICollection<Assessment>? Assessments { get; set; }= new List<Assessment>();
-        public int ParentId { get; set; }
+        public string ParentId { get; set; }
         public  virtual Parent?Parent { get; set; }
         public virtual ICollection<Child_Activity>? Child_Activities { get; set; }=new List<Child_Activity>();
         public virtual ICollection<ProgressReport>? Progress_Reports { get; set; }=new List<ProgressReport> ();
