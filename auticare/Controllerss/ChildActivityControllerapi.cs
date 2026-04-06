@@ -1,9 +1,10 @@
-﻿using System.Linq;
-using Microsoft.EntityFrameworkCore;
-using auticare.core;
+﻿using auticare.core;
 using auticare.Data;
-using Microsoft.AspNetCore.Mvc;
 using auticare.Models;
+using Microsoft.AspNetCore.JsonPatch;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 
 namespace auticare.Controllerss
@@ -14,6 +15,7 @@ namespace auticare.Controllerss
     {
 
         private readonly AuticareDbContext _context;
+        private int activityId;
 
         public ChildActivityControllerapi(AuticareDbContext context)
         {
@@ -114,5 +116,20 @@ namespace auticare.Controllerss
 
             return Ok(activities);
         }
+        [HttpPatch("UpdateProgress")]
+        public IActionResult UpdateProgressPatch(int childId, [FromBody] JsonPatchDocument<Child_Activity> patchDoc)
+        {
+            var record = _context.Set<Child_Activity>()
+                .FirstOrDefault(ca => ca.ChildId == childId && ca.ActivityId == activityId);
+
+            if (record == null) return NotFound();
+
+            patchDoc.ApplyTo(record);
+
+            _context.SaveChanges();
+            return Ok(record);
+
+        }
+
     }
 }

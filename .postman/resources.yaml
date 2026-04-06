@@ -1,0 +1,7 @@
+# Use this workspace to collaborate
+workspace:
+  id: a8b3812e-5fc8-4cbd-8e46-6fda5be92f85
+
+localResources:
+  specs:
+    - ..\auticare\obj\Debug\net8.0\EndpointInfo\auticare.json

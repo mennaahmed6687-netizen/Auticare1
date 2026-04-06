@@ -2,6 +2,7 @@
 using auticare.core;
 using auticare.Data;
 using auticare.Models;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -101,4 +102,5 @@ public class ParentsController : ControllerBase
         return Ok("Parent and related children/activities deleted successfully.");
 
     }
+
 }

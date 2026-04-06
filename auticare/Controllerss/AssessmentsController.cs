@@ -1,12 +1,13 @@
-﻿using System;
+﻿using auticare.core;
+using auticare.Data;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.JsonPatch;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using auticare.Data;
-using auticare.core;
 
 namespace auticare.Controllerss
 {
@@ -103,6 +104,20 @@ namespace auticare.Controllerss
         private bool AssessmentExists(int id)
         {
             return _context.assessments.Any(e => e.assessment_id == id);
+        }
+        [HttpPatch("{id}")]
+        public IActionResult UpdateAssessmentPatch([FromRoute] int id, [FromBody] JsonPatchDocument<Assessment> patchDoc)
+        {
+            var Assessment = _context.assessments.FirstOrDefault(c => c.assessment_id == id);
+
+            if (Assessment == null)
+                return NotFound("Child not found.");
+
+            patchDoc.ApplyTo(Assessment);
+
+            _context.SaveChanges();
+
+            return Ok(Assessment);
         }
     }
 }

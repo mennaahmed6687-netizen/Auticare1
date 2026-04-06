@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using auticare.Data;
 using auticare.core;
+using Azure;
+using Microsoft.AspNetCore.JsonPatch;
 
 namespace auticare.Controllerss
 {
@@ -159,7 +161,21 @@ namespace auticare.Controllerss
                 model.Attempts
             });
         }
+        [HttpPatch("{id}")]
+        public IActionResult UpdateChildPatch([FromRoute] int id, [FromBody] JsonPatchDocument<Child> patchDoc)
+        {
+            var child = _context.Child.FirstOrDefault(c => c.ChildId == id);
+
+            if (child == null)
+                return NotFound("Child not found.");
+
+            patchDoc.ApplyTo(child);
+
+            _context.SaveChanges();
+
+            return Ok(child);
+        }
 
     }
-    }
+}
 

@@ -35,6 +35,7 @@ namespace auticare.core
         public int ParentId { get; set; }
         public Parent?Parent { get; set; }
         public List<Child_Activity>? Child_Activities { get; set; }=new List<Child_Activity>();
+        public List<ProgressReport>? Progress_Reports { get; set; }=new List<ProgressReport> ();
      
     }
 }

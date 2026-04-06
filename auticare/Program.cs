@@ -15,7 +15,7 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddMvc(op => op.EnableEndpointRouting = false);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddNewtonsoftJson();
 
 
 builder.Services.AddControllers()
