@@ -10,7 +10,7 @@ namespace auticare.core.DTO
     public class DtoLogin
     {
         
-        public required string UserName { get; set; }
+        public required string Email { get; set; }
         public required string Password { get; set; }
     }
 }

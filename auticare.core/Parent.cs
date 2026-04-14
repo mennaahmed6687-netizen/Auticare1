@@ -13,6 +13,7 @@ namespace auticare.core
         public string ParentId { get; set; }
 
         [Required]
+     
         public string Name { get; set; }  // مهم
 
         [Required]

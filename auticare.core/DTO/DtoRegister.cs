@@ -10,6 +10,7 @@ namespace auticare.core.DTO
     public class DtoRegister
     {
         [Required]
+    
         public string Name { get; set; }
 
         

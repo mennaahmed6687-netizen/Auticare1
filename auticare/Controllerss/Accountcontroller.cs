@@ -32,7 +32,8 @@ namespace auticare.Controllers
             Parent parent = new Parent
             {
                 Name = user.Name,
-                UserName = user.Name,   // مهم جدًا لـ Identity
+                                      // مهم جدًا لـ Identity\
+                UserName = user.Email,
                 Email = user.Email,
                 Phone = user.Phone
             };
@@ -56,7 +57,7 @@ namespace auticare.Controllers
                 return BadRequest(ModelState);
 
             // البحث باستخدام UserName (وهو Name عندك)
-            var parent = await _userManager.FindByNameAsync(login.UserName);
+            var parent = await _userManager.FindByEmailAsync(login.Email);
 
             if (parent == null)
                 return Unauthorized("Invalid User");
