@@ -1,9 +1,11 @@
 ﻿using auticare.core;
+using auticare.Data;
 using auticare.Extentions;
+using auticare.Services;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
-using auticare.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -60,6 +62,8 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
 
+
+
 // ==========================
 // Swagger
 // ==========================
@@ -69,7 +73,22 @@ builder.Services.AddSwaggerGenJwtAuth();
 // ==========================
 // Build
 // ==========================
-var app = builder.Build();
+var google = builder.Configuration.GetSection("Authentication:Google");
+
+
+
+builder.Services.AddAuthentication()
+    .AddGoogle(options =>
+    {
+        options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
+        options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+        options.CallbackPath = "/signin-google";
+    });
+builder.Services.AddScoped<EmailService>();
+
+
+var app = builder.Build();  // ✅ بعد ما خلصت Services
+
 
 // ==========================
 // Middleware
