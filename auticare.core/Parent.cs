@@ -9,8 +9,7 @@ namespace auticare.core
 {
     public class Parent : IdentityUser
     {
-        [Key]
-        public string ParentId { get; set; }
+   
 
         [Required]
      
@@ -21,7 +20,7 @@ namespace auticare.core
         public string Phone { get; set; }
 
         public DateTime Created { get; set; } = DateTime.Now;
-        public virtual List<Child>? children { get; set; } = new List<Child>();
+        public virtual List<Childern>? children { get; set; } = new List<Childern>();
         public virtual ProgressReport ProgressReport { get; set; }
     }
 }

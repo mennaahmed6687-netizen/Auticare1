@@ -20,7 +20,7 @@ namespace auticare.core
         [Required]
         public DateTime date { get; set; } = DateTime.Now;
         public int ChildId {  get; set; } //foreginkey
-        public virtual Child ?Child { get; set; }
+        public virtual Childern ?Child { get; set; }
 
 
     }

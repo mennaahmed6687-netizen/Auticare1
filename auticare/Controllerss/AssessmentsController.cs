@@ -1,5 +1,6 @@
 ﻿using auticare.core;
 using auticare.Data;
+using Auticare.core;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
@@ -26,14 +27,14 @@ namespace auticare.Controllerss
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Assessment>>> Getassessments()
         {
-            return await _context.assessments.ToListAsync();
+            return await _context.Assessments.ToListAsync();
         }
 
         // GET: api/Assessments/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Assessment>> GetAssessment(int id)
         {
-            var assessment = await _context.assessments.FindAsync(id);
+            var assessment = await _context.Assessments.FindAsync(id);
 
             if (assessment == null)
             {
@@ -79,7 +80,7 @@ namespace auticare.Controllerss
         [HttpPost]
         public async Task<ActionResult<Assessment>> PostAssessment(Assessment assessment)
         {
-            _context.assessments.Add(assessment);
+            _context.Assessments.Add(assessment);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction("GetAssessment", new { id = assessment.assessment_id }, assessment);
@@ -89,13 +90,13 @@ namespace auticare.Controllerss
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAssessment(int id)
         {
-            var assessment = await _context.assessments.FindAsync(id);
+            var assessment = await _context.Assessments.FindAsync(id);
             if (assessment == null)
             {
                 return NotFound();
             }
 
-            _context.assessments.Remove(assessment);
+            _context.Assessments.Remove(assessment);
             await _context.SaveChangesAsync();
 
             return NoContent();
@@ -103,12 +104,12 @@ namespace auticare.Controllerss
 
         private bool AssessmentExists(int id)
         {
-            return _context.assessments.Any(e => e.assessment_id == id);
+            return _context.Assessments.Any(e => e.assessment_id == id);
         }
         [HttpPatch("{id}")]
         public IActionResult UpdateAssessmentPatch([FromRoute] int id, [FromBody] JsonPatchDocument<Assessment> patchDoc)
         {
-            var Assessment = _context.assessments.FirstOrDefault(c => c.assessment_id == id);
+            var Assessment = _context.Assessments.FirstOrDefault(c => c.assessment_id == id);
 
             if (Assessment == null)
                 return NotFound("Child not found.");

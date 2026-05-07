@@ -9,12 +9,12 @@ namespace auticare.core
 {
     public class Child_Activity
     {
-        public level level;
+        public string level;
 
         [Key]
         public int ?child_activityId {  get; set; }
         public int ChildId {  get; set; }
-        public virtual Child?Child { get; set; }    
+        public virtual Childern?Child { get; set; }    
         public int ActivityId { get; set; }
         public virtual Activity?Activity { get; set; }
         
@@ -24,6 +24,7 @@ namespace auticare.core
 
         public int Duration { get; set; }
         public string? ActivityName { get; set; }
- 
+        public DateTime CreatedAt { get; set; }
+
     }
 }

@@ -31,7 +31,7 @@ namespace auticare.Extentions
                     ValidIssuer = config["JWT:Issuer"],
 
                     IssuerSigningKey = new SymmetricSecurityKey(
-                        Encoding.UTF8.GetBytes(config["JWT:SecretKey"])
+                        Encoding.UTF8.GetBytes(config["JWT:SecretKey"]!)
                     )
                 };
             });

@@ -7,12 +7,12 @@ using auticare.core;
 
 namespace auticare.Data
 {
-    public class UserEntity : IdataChild<Child>, IUserEntity, IUserEntity1
+    public class UserEntity : IdataChild<Childern>, IUserEntity, IUserEntity1
     {
-        List<Child> Listofchild =new List<Child>() ;
-        private Child? child;
+        List<Childern> Listofchild =new List<Childern>() ;
+        private Childern? child;
 
-        public void Add(Child table)
+        public void Add(Childern table)
         {
             Listofchild.Add(table);
         }
@@ -25,7 +25,7 @@ namespace auticare.Data
             Listofchild.Remove(child);
         }
 
-        public Child find(int id)
+        public Childern find(int id)
         {
             return Listofchild.Where(x => x.ChildId == id).First();
         }
@@ -34,18 +34,18 @@ namespace auticare.Data
 
 
 
-        public List<Child> GetData()
+        public List<Childern> GetData()
         {
             return Listofchild;
         }
 
-        public List<Child> Search(int ChildId)
+        public List<Childern> Search(int ChildId)
         {
             return Listofchild.Where(x => x.ChildId == ChildId).ToList();
 
         }
 
-        public void Update(int id, Child table)
+        public void Update(int id, Childern table)
         {
             child = find(id);
             child.Name = table.Name;

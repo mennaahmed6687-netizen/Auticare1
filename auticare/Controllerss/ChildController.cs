@@ -6,9 +6,9 @@ namespace auticare.Controllerss
 {
     public class ChildController : Controller
     {
-        private readonly IdataChild<Child> dataChild;
+        private readonly IdataChild<Childern> dataChild;
 
-        public ChildController(IdataChild<Child> dataChild )
+        public ChildController(IdataChild<Childern> dataChild )
         {
             this.dataChild = dataChild;
         }

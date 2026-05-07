@@ -16,7 +16,8 @@ namespace auticare.core.DTO
         public int Attempts { get; set; }
 
         public int Duration { get; set; }
-        public level Level { get; set; }
-        public virtual Activity Activity { get; set; }
+        public string Level { get; set; }   
+
+        public DateTime CreatedAt{ get; set; }
     }
 }

@@ -4,11 +4,11 @@ namespace auticare.Data
 {
     public interface IUserEntity
     {
-        void Add(Child table);
+        void Add(Childern table);
         void Delete(int id);
-        Child find(int id);
-        List<Child> GetData();
-        List<Child> Search(int ChildId);
-        void Update(int id, Child table);
+        Childern find(int id);
+        List<Childern> GetData();
+        List<Childern> Search(int ChildId);
+        void Update(int id, Childern table);
     }
 }

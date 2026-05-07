@@ -1,6 +1,8 @@
 ﻿using auticare.core;
+using auticare.core.DTO;
 using auticare.Data;
 using auticare.Models;
+using Auticare.core;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -9,51 +11,81 @@ using System.Linq;
 
 namespace auticare.Controllerss
 {
-    [Route("api/[controller]")]
     [ApiController]
-    public class ChildActivityControllerapi : ControllerBase
+    [Route("api/[controller]")]
+    public class ChildActivityController : ControllerBase
     {
-
         private readonly AuticareDbContext _context;
-        private int activityId;
 
-        public ChildActivityControllerapi(AuticareDbContext context)
+        public ChildActivityController(AuticareDbContext context)
         {
             _context = context;
         }
 
-        // تعيين نشاط لطفل
-        // ================= Child Activity =================
-        [HttpPost("addChildActivity")]
-        public IActionResult AddChildActivity([FromQuery] int childId, [FromQuery] int activityId)
+        // 👇 الدالة هنا عادي جدًا
+        private string CalculateLevel(int score)
         {
-            var child = _context.Set<Child>().Find(childId);
-            if (child == null) return BadRequest("Child not found.");
+            if (score >= 80)
+                return "متقدم";
 
-            var activity = _context.Set<Activity>().Find(activityId);
-            if (activity == null) return BadRequest("Activity not found.");
+            if (score >= 50)
+                return "متوسط";
 
-            var childActivity = new Child_Activity
+            return "مبتدئ";
+        }
+
+        [HttpPost("saveChildActivity")]
+        public IActionResult SaveChildActivity([FromBody] ChildActivityDto dto, [FromQuery] int childId)
+        {
+            // 🔴 Validation مهم
+            if (childId <= 0 || dto.ActivityId <= 0)
+                return BadRequest("Invalid ChildId or ActivityId");
+
+            var activity = _context.Set<Activity>().Find(dto.ActivityId);
+            if (activity == null)
+                return BadRequest("Activity not found");
+
+            var childActivity = _context.Set<Child_Activity>()
+                .FirstOrDefault(x => x.ChildId == childId && x.ActivityId == dto.ActivityId);
+
+            if (childActivity == null)
             {
-                ChildId = childId,
-                ActivityId = activityId,
-                Child = child,
-                Activity = activity,
-                Score = 0,
-                Attempts = 0,
-                Duration = 0
-            };
+                childActivity = new Child_Activity
+                {
+                    ChildId = childId,
+                    ActivityId = dto.ActivityId,
+                    Score = dto.Score,
+                    Attempts = 1,
+                    Duration = dto.Duration,
+                    CreatedAt = DateTime.Now,
+                    level = CalculateLevel(dto.Score)
+                };
 
-            _context.Set<Child_Activity>().Add(childActivity);
+                _context.Add(childActivity);
+            }
+            else
+            {
+                // 🔴 منع القسمة على صفر + حساب أدق
+                var totalAttempts = childActivity.Attempts + 1;
+
+                childActivity.Score =
+                    ((childActivity.Score * childActivity.Attempts) + dto.Score)
+                    / totalAttempts;
+
+                childActivity.Attempts = totalAttempts;
+                childActivity.Duration += dto.Duration;
+                childActivity.CreatedAt = DateTime.Now;
+
+                childActivity.level = CalculateLevel(childActivity.Score);
+
+                _context.Update(childActivity);
+            }
+
             _context.SaveChanges();
 
-            return Ok(new
-            {
-                childActivity.child_activityId,
-                childActivity.ChildId,
-                childActivity.ActivityId
-            });
+            return Ok(childActivity);
         }
+
         [HttpPut("UpdateProgress")]
         public IActionResult UpdateProgress(int childId, int activityId, int attempts, int duration, int score)
         {
@@ -93,43 +125,41 @@ namespace auticare.Controllerss
             return Ok(result);
         }
         // ================= Get Activities for a Child =================
-        [HttpGet("childActivities/{childId}")]
-        public IActionResult GetActivitiesForChild(int childId)
+        [HttpGet("childActivities")]
+        public IActionResult GetActivitiesForChild()
         {
-            var child = _context.Set<Child>()
+            // 👇 هات الـ childId من التوكن (المستخدم الحالي)
+            var childIdClaim = User.FindFirst("childId")?.Value;
+
+            if (childIdClaim == null)
+                return Unauthorized();
+
+            int childId = int.Parse(childIdClaim);
+
+            var child = _context.Set<Childern>()
                 .Include(c => c.Child_Activities)
                 .ThenInclude(ca => ca.Activity)
                 .FirstOrDefault(c => c.ChildId == childId);
 
-            if (child == null) return NotFound("Child not found.");
+            if (child == null)
+                return NotFound("Child not found.");
 
             var activities = child.Child_Activities.Select(ca => new
             {
                 ca.ActivityId,
-                ca.Activity.Name,
+                ActivityName = ca.Activity.Name,
                 ca.Activity.Description,
-                ca.Activity.Level,
-                ca.Score,
-                ca.Attempts,
-                ca.Duration
+
+                // ✅ القيم الصح
+                Score = ca.Score,
+                Level = ca.level,
+                Attempts = ca.Attempts,
+                Duration = ca.Duration
             }).ToList();
 
             return Ok(activities);
         }
-        [HttpPatch("UpdateProgress")]
-        public IActionResult UpdateProgressPatch(int childId, [FromBody] JsonPatchDocument<Child_Activity> patchDoc)
-        {
-            var record = _context.Set<Child_Activity>()
-                .FirstOrDefault(ca => ca.ChildId == childId && ca.ActivityId == activityId);
 
-            if (record == null) return NotFound();
-
-            patchDoc.ApplyTo(record);
-
-            _context.SaveChanges();
-            return Ok(record);
-
-        }
 
     }
 }

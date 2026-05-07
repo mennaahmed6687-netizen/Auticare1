@@ -1,26 +1,27 @@
 ﻿using auticare.core;
-using auticare.Data;
 using auticare.Extentions;
 using auticare.Services;
-using Microsoft.AspNetCore.Authentication.Google;
+using Auticare.core;
+using Auticare.Core.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Authentication.Google;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ==========================
-// DbContext
-// ==========================
+#region DATABASE
 builder.Services.AddDbContext<AuticareDbContext>(options =>
-    options.UseLazyLoadingProxies()
-           .UseSqlServer(builder.Configuration.GetConnectionString("auticareContext")
-               ?? throw new InvalidOperationException("Connection string not found."))
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("auticareContext")
+    )
 );
+#endregion
 
-// ==========================
-// Identity
-// ==========================
+#region IDENTITY
 builder.Services.AddIdentity<Parent, IdentityRole>(options =>
 {
     options.Password.RequireDigit = true;
@@ -29,71 +30,97 @@ builder.Services.AddIdentity<Parent, IdentityRole>(options =>
     options.Password.RequireNonAlphanumeric = true;
     options.Password.RequiredLength = 6;
 
-    options.User.AllowedUserNameCharacters =
-   "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+";
     options.User.RequireUniqueEmail = true;
+
 })
 .AddEntityFrameworkStores<AuticareDbContext>()
 .AddDefaultTokenProviders();
+#endregion
 
-// ==========================
-// JWT
-// ==========================
-builder.Services.AddCustomJwtAuth(builder.Configuration);
+#region AUTHENTICATION (JWT + GOOGLE)
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme; // مهم لGoogle
+})
+.AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
 
-// ==========================
-// CORS
-// ==========================
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+
+        ValidIssuer = builder.Configuration["JWT:Issuer"],
+        ValidAudience = builder.Configuration["JWT:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(builder.Configuration["JWT:SecretKey"]!)
+        )
+    };
+})
+.AddGoogle(options =>
+{
+    options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
+    options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+
+    // مهم جدًا
+    options.CallbackPath = "/signin-google";
+});
+#endregion
+
+#region CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("MyPolicy",
-        policy => policy.WithOrigins("http://127.0.0.1:5500")
-                        .AllowAnyMethod()
-                        .AllowAnyHeader());
+    options.AddPolicy("MyPolicy", policy =>
+    {
+        policy.WithOrigins(
+                "http://127.0.0.1:5500",
+                "http://localhost:5500"
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
 });
+#endregion
 
-// ==========================
-// Controllers
-// ==========================
+#region CONTROLLERS
 builder.Services.AddControllers()
     .AddNewtonsoftJson()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
+#endregion
 
-
-
-// ==========================
-// Swagger
-// ==========================
+#region SWAGGER
+builder.Services.AddHttpClient();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGenJwtAuth();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.CustomSchemaIds(type => type.FullName);
+});
+#endregion
 
-// ==========================
-// Build
-// ==========================
-var google = builder.Configuration.GetSection("Authentication:Google");
-
-
-
-builder.Services.AddAuthentication()
-    .AddGoogle(options =>
-    {
-        options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
-        options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
-        options.CallbackPath = "/signin-google";
-    });
+#region SERVICES
 builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<Auticare.Services.Admin.IAdminService,
+                           Auticare.Services.Admin.AdminService>();
+#endregion
 
+var app = builder.Build();
 
-var app = builder.Build();  // ✅ بعد ما خلصت Services
-
-
-// ==========================
-// Middleware
-// ==========================
+#region PIPELINE
 app.UseStaticFiles();
+
+app.UseHttpsRedirection();
+
+app.UseSwagger();
+app.UseSwaggerUI();
+
 app.UseRouting();
 
 app.UseCors("MyPolicy");
@@ -101,9 +128,47 @@ app.UseCors("MyPolicy");
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseSwagger();
-app.UseSwaggerUI();
-
 app.MapControllers();
+#endregion
+
+#region SEED ADMIN USER
+using (var scope = app.Services.CreateScope())
+{
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Parent>>();
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+    var adminRole = "Admin";
+    var adminEmail = "admin@auticare.com";
+    var adminPassword = "Admin@123";
+
+    if (!await roleManager.RoleExistsAsync(adminRole))
+        await roleManager.CreateAsync(new IdentityRole(adminRole));
+
+    var adminUser = await userManager.FindByEmailAsync(adminEmail);
+
+    if (adminUser == null)
+    {
+        adminUser = new Parent
+        {
+            UserName = adminEmail,
+            Email = adminEmail,
+            Name = "Admin User",
+            EmailConfirmed = true,
+            Phone = "01000000000",
+            Created = DateTime.UtcNow
+        };
+
+        var result = await userManager.CreateAsync(adminUser, adminPassword);
+
+        if (result.Succeeded)
+            await userManager.AddToRoleAsync(adminUser, adminRole);
+    }
+    else
+    {
+        if (!await userManager.IsInRoleAsync(adminUser, adminRole))
+            await userManager.AddToRoleAsync(adminUser, adminRole);
+    }
+}
+#endregion
 
 app.Run();

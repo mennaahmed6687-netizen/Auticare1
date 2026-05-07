@@ -1,8 +1,12 @@
 ﻿using auticare.core;
 using auticare.core.DTO;
+using auticare.Data;
+using Auticare.core;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Org.BouncyCastle.Asn1.Ocsp;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -15,6 +19,7 @@ namespace auticare.Controllers
     {
         private readonly UserManager<Parent> _userManager;
         private readonly IConfiguration _configuration;
+        private readonly AuticareDbContext _context;
 
         public AccountController(UserManager<Parent> userManager, IConfiguration configuration)
         {
@@ -32,7 +37,7 @@ namespace auticare.Controllers
             Parent parent = new Parent
             {
                 Name = user.Name,
-                                      // مهم جدًا لـ Identity\
+                // مهم جدًا لـ Identity\
                 UserName = user.Email,
                 Email = user.Email,
                 Phone = user.Phone
@@ -48,31 +53,46 @@ namespace auticare.Controllers
 
             return BadRequest(ModelState);
         }
-
-        // ---------------- LOGIN ----------------
         [HttpPost("Login")]
         public async Task<IActionResult> Login([FromBody] DtoLogin login)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
 
-            // البحث باستخدام UserName (وهو Name عندك)
-            var parent = await _userManager.FindByEmailAsync(login.Email);
 
-            if (parent == null)
-                return Unauthorized("Invalid User");
+            
+                if (!ModelState.IsValid)
+                    return BadRequest(new { message = "بيانات غير صحيحه" });
 
-            if (!await _userManager.CheckPasswordAsync(parent, login.Password))
-                return Unauthorized("Invalid Password");
+                var parent = await _userManager.FindByEmailAsync(login.Email);
+
+                if (parent == null)
+                    return Unauthorized(new { message = "هذا البريد الالكتروني غير موجود" });
+
+                var isPasswordValid = await _userManager.CheckPasswordAsync(parent, login.Password);
+
+                if (!isPasswordValid)
+                    return Unauthorized(new { message = "كلمة السر غير صحيحه" });
+
+            // ✅ IMPORTANT FIX
+      
+
+           
+
+           
+
 
             // ---------------- CLAIMS ----------------
             var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.Name, parent.UserName),
-                new Claim(ClaimTypes.NameIdentifier, parent.Id.ToString()),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-            };
+    {
+        new Claim(ClaimTypes.NameIdentifier, parent.Id),
+        new Claim(ClaimTypes.Name, parent.UserName ?? ""),
+        new Claim(ClaimTypes.Email, parent.Email ?? ""),
+        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+       
 
+        // ✅ التصليح هنا فقط
+
+    };
+            // 🔐 Roles
             var roles = await _userManager.GetRolesAsync(parent);
             foreach (var role in roles)
             {
@@ -95,10 +115,19 @@ namespace auticare.Controllers
                 signingCredentials: creds
             );
 
+            var jwt = new JwtSecurityTokenHandler().WriteToken(token);
+
+            // ---------------- RESPONSE ----------------
             return Ok(new
             {
-                token = new JwtSecurityTokenHandler().WriteToken(token),
-                expiration = token.ValidTo
+                token = jwt,
+                expiration = token.ValidTo,
+                email = parent.Email,
+                username = parent.UserName,
+                role = roles.Contains("Admin") ? "Admin" : "Parent",
+                isAdmin = roles.Contains("Admin"),
+                message = "Login successful",
+                parentId=parent.Id,
             });
         }
     }

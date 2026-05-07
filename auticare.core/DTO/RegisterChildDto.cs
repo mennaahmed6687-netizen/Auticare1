@@ -19,6 +19,7 @@ namespace auticare.core.DTO
         [Required]
         public Gender Gender { get; set; }
 
+
         public DiagnosisLevel Diagnosis_Level { get; set; }
         public string ParentId { get; set; }
     }

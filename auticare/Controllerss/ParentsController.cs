@@ -2,6 +2,7 @@
 using auticare.core;
 using auticare.Data;
 using auticare.Models;
+using Auticare.core;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -34,7 +35,7 @@ public class ParentsController : ControllerBase
 
         return Ok(new
         {
-            parent.ParentId,
+            
             parent.UserName,
             parent.Email,
             parent.Phone
@@ -42,10 +43,10 @@ public class ParentsController : ControllerBase
     }
     // ================= GET =================
     [HttpGet("{id}")]
-    public IActionResult GetParent([FromQuery] string id)
+    public IActionResult GetParent([FromQuery] int id)
     {
-        var parent = _context.Parent
-            .FirstOrDefault(p => p.ParentId == id);
+        var parent = _context.Parents
+            .FirstOrDefault( );
 
         if (parent == null)
             return NotFound();
@@ -60,9 +61,9 @@ public class ParentsController : ControllerBase
 
     // ================= PUT =================
     [HttpPut("{id}")]
-    public IActionResult UpdateParent(string id, [FromBody] string newName)
+    public IActionResult UpdateParent(int id, [FromBody] string newName)
     {
-        var parent = _context.Parent.FirstOrDefault(p => p.ParentId == id);
+        var parent = _context.Parents.FirstOrDefault();
 
         if (parent == null)
             return NotFound("Parent not found.");
@@ -75,12 +76,12 @@ public class ParentsController : ControllerBase
     }
     // ================= DELETE =================
     [HttpDelete("{id}")]
-    public IActionResult DeleteParent(string id)
+    public IActionResult DeleteParent(int id)
     {
-        var parent = _context.Parent
+        var parent = _context.Parents
             .Include(p => p.children)
                 .ThenInclude(c => c.Child_Activities)
-            .FirstOrDefault(p => p.ParentId == id);
+            .FirstOrDefault();
 
         if (parent == null) return NotFound("Parent not found.");
 
@@ -93,10 +94,10 @@ public class ParentsController : ControllerBase
 
         // حذف الأطفال
         if (parent.children.Any())
-            _context.Child.RemoveRange(parent.children);
+            _context.Childerns.RemoveRange(parent.children);
 
         // حذف الأب نفسه
-        _context.Parent.Remove(parent);
+        _context.Parents.Remove(parent);
         _context.SaveChanges();
 
         return Ok("Parent and related children/activities deleted successfully.");

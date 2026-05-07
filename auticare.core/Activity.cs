@@ -20,13 +20,15 @@ namespace auticare.core
         [Required]
         [MaxLength(50)]
         public string Name { get; set; }
-       
+       public int MinAge { get; set; }
+        public int MaxAge { get; set; }
         public string Description { get; set; }
 
-        public level Level { get; set; }
+        public string Level { get; set; }
         public virtual ICollection<Child_Activity> ChildActivities { get; set; }=new List<Child_Activity>();
         public string? ImageName {  get; set; }
         public string?AudioName { get; set; }
-
+        
+        public int? Score { get; set; }
     }
 }

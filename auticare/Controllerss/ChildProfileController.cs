@@ -4,6 +4,7 @@ using auticare.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using auticare.core;
+using Auticare.core;
 
 
 [Route("api/[controller]")]
@@ -21,7 +22,7 @@ using auticare.core;
         [HttpGet("{id}")]
         public async Task<IActionResult> GetProfile(int id)
         {
-            var child = await _context.Child
+            var child = await _context.Childerns
                 .Where(c => c.ChildId == id)
                 .Select(c => new ChildProfileDto
                 {

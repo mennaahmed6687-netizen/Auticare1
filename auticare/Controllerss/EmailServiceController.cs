@@ -18,67 +18,69 @@ namespace auticare.Controllers
             _emailService = emailService;
         }
 
-        // =========================
-        // 🔐 FORGOT PASSWORD
-        // =========================
+        // ================= FORGOT PASSWORD =================
         [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto model)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            if (string.IsNullOrWhiteSpace(model?.Email))
+                return BadRequest(new { message = "البريد الإلكتروني مطلوب ❌" });
 
             var user = await _userManager.FindByEmailAsync(model.Email);
 
             if (user == null)
-                return Ok("If email exists, reset link will be sent.");
+                return Ok(new { message = "تم إرسال الرابط إذا كان البريد موجودًا ✉️" });
 
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
 
-            var encodedToken = Uri.EscapeDataString(token);
-            var resetLink = $"http://127.0.0.1:5500/Grad_project-main%20(1)/Grad_project-main/html/resetpassword.html?email={Uri.EscapeDataString(model.Email)}&token={encodedToken}";
+            // ⚠️ مهم: لا تعتمد double encoding
+            var resetLink =
+                $"http://127.0.0.1:5500/html/resetpassword.html" +
+                $"?email={model.Email}&token={Uri.EscapeDataString(token)}";
 
             await _emailService.SendEmailAsync(
                 model.Email,
-                "Reset Password",
-                $"Click here to reset your password: <a href='{resetLink}'>Reset Password</a>"
+                "إعادة تعيين كلمة المرور",
+                $"اضغط هنا: <a href='{resetLink}'>Reset Password</a>"
             );
 
-            return Ok("Reset link sent to email");
+            return Ok(new { message = "تم إرسال رابط إعادة التعيين ✉️" });
         }
 
-        // =========================
-        // 🔁 RESET PASSWORD
-        // =========================
+        // ================= RESET PASSWORD =================
         [HttpPost("reset-password")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto model)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            if (string.IsNullOrWhiteSpace(model?.Email) ||
+                string.IsNullOrWhiteSpace(model?.Token))
+            {
+                return BadRequest(new { message = "بيانات غير صحيحة ❌" });
+            }
 
             var user = await _userManager.FindByEmailAsync(model.Email);
 
             if (user == null)
-                return BadRequest("Invalid request");
-
-            var decodedToken = Uri.UnescapeDataString(model.Token);
+                return BadRequest(new { message = "المستخدم غير موجود ❌" });
 
             var result = await _userManager.ResetPasswordAsync(
                 user,
-                decodedToken,
+                model.Token, // 👈 بدون Unescape (مهم جدًا)
                 model.NewPassword
             );
 
             if (result.Succeeded)
-                return Ok("Password reset successfully");
+            {
+                return Ok(new { message = "تم تغيير كلمة المرور بنجاح ✅" });
+            }
 
-            return BadRequest(result.Errors);
+            return BadRequest(new
+            {
+                message = "فشل تغيير كلمة المرور ❌",
+                errors = result.Errors.Select(e => e.Description)
+            });
         }
     }
 
-    // =========================
-    // 📦 DTOs (Correct Version)
-    // =========================
-
+    // ================= DTOs =================
     public class ForgotPasswordDto
     {
         public string Email { get; set; }

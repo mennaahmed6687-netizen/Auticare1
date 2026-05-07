@@ -9,6 +9,7 @@ using auticare.Data;
 using auticare.core;
 using Azure;
 using Microsoft.AspNetCore.JsonPatch;
+using Auticare.core;
 
 namespace auticare.Controllerss
 {
@@ -35,12 +36,12 @@ namespace auticare.Controllerss
 )
         {
             // 1️⃣ تحقق من وجود Parent
-            var parent = _context.Parent.Find(parentId);
+            var parent = _context.Parents.Find(parentId);
             if (parent == null)
                 return BadRequest("Parent not found.");
 
             // 2️⃣ إنشاء كائن Child
-            var child = new Child
+            var child = new Childern
             {
                 Name = name,
                 Age = age,
@@ -67,7 +68,7 @@ namespace auticare.Controllerss
                 });
             }
             // 4️⃣ حفظ الطفل مع الأنشطة
-            _context.Child.Add(child);
+            _context.Childerns.Add(child);
             _context.SaveChanges();
 
             // 5️⃣ إرجاع النتيجة
@@ -92,7 +93,7 @@ namespace auticare.Controllerss
         [HttpGet("{id}")]
         public IActionResult GetChild(int id)
         {
-            var child = _context.Child
+            var child = _context.Childerns
                 .Include(c => c.Parent)
                 .Include(c => c.Child_Activities)
                     .ThenInclude(ca => ca.Activity)
@@ -106,7 +107,7 @@ namespace auticare.Controllerss
         [HttpGet]
         public IActionResult GetAllChildren()
         {
-            var children = _context.Child
+            var children = _context.Childerns
                 .Include(c => c.Parent)
                 .Include(c => c.Child_Activities)
                     .ThenInclude(ca => ca.Activity)
@@ -120,7 +121,7 @@ namespace auticare.Controllerss
         [HttpPut("{id}")]
         public IActionResult UpdateChild(int id, [FromBody] string newName)
         {
-            var child = _context.Child.FirstOrDefault(c => c.ChildId == id);
+            var child = _context.Childerns.FirstOrDefault(c => c.ChildId == id);
             if (child == null) return NotFound("Child not found.");
 
             child.Name = newName;
@@ -132,7 +133,7 @@ namespace auticare.Controllerss
         [HttpPut("UpdateChildActivity/{childId}/{activityId}")]
         public IActionResult Child_Activity(int childId, int activityId, Child_Activity model)
         {
-            var child = _context.Child.Find(childId);
+            var child = _context.Childerns.Find(childId);
             if (child == null)
                 return BadRequest("Child not found.");
 
@@ -162,9 +163,9 @@ namespace auticare.Controllerss
             });
         }
         [HttpPatch("{id}")]
-        public IActionResult UpdateChildPatch([FromRoute] int id, [FromBody] JsonPatchDocument<Child> patchDoc)
+        public IActionResult UpdateChildPatch([FromRoute] int id, [FromBody] JsonPatchDocument<Childern> patchDoc)
         {
-            var child = _context.Child.FirstOrDefault(c => c.ChildId == id);
+            var child = _context.Childerns.FirstOrDefault(c => c.ChildId == id);
 
             if (child == null)
                 return NotFound("Child not found.");

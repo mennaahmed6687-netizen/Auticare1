@@ -1,8 +1,9 @@
 ﻿using auticare.core;
 using auticare.core.DTO;
 using auticare.Data;
+using Auticare.core;
 using Microsoft.AspNetCore.Mvc;
-using System.Web.Http.ModelBinding;
+
 
 namespace auticare.Controllerss
 {
@@ -28,14 +29,14 @@ namespace auticare.Controllerss
                 if (dto.Age > 12)
                     return BadRequest("Age cannot be more than 12");
 
-                var child = new Child
+                var child = new Childern
                 {
                     Name = dto.Name,
                     Age = dto.Age,
                     Gender = dto.Gender
                 };
 
-                _context.Child.Add(child);
+                _context.Childerns.Add(child);
                 await _context.SaveChangesAsync();
 
                 return CreatedAtAction(nameof(GetChildById), new { id = child.ChildId }, new
@@ -51,7 +52,7 @@ namespace auticare.Controllerss
             [HttpGet("{id}")]
             public async Task<IActionResult> GetChildById(int id)
             {
-                var child = await _context.Child.FindAsync(id);
+                var child = await _context.Childerns.FindAsync(id);
 
                 if (child == null)
                     return NotFound("Child not found");

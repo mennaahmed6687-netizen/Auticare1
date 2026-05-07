@@ -5,27 +5,37 @@ using System.Text;
 using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
 
+
+public enum ReportType
+{
+    [Display(Name = "العيون")]
+    Eye,
+
+    [Display(Name = "السمع")]
+    Hearing,
+
+    [Display(Name = "الأعصاب")]
+    Neuro,
+
+    [Display(Name = "النطق")]
+    Speech
+}
 namespace auticare.core
 {
-    public class ProgressReport
-    {
-        public string? description;
+ public class ProgressReport
+{
+    [Key]
+    public int Id { get; set; }
 
-        [Key]
-        public int? Id { get; set; }
-        public int? Report { get; set; }
-        public double AverageScore { get; set; }
-        public virtual Parent Parent { get; set; }
-        public string? ParentId { get; set; }
+    public ReportType ProgressReportType { get; set; }
 
+    public string? Description { get; set; }  // 👈 nullable
 
-        public required string RecommendedNextStep { get; set; }
-        public DateTime ReportDate { get; set; }
-        public required string OverallProgress { get; set; }
-        public int completedactivities { get; set; }
-        
+    public string? FilePath { get; set; }
 
+    public DateTime ReportDate { get; set; } = DateTime.Now;
 
-
-    }
+    public string ParentId { get; set; }
+    public Parent Parent { get; set; }
+}
 }
