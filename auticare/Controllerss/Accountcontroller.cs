@@ -27,33 +27,83 @@ namespace auticare.Controllers
             _configuration = configuration;
         }
 
-        // ---------------- REGISTER ----------------
-        [HttpPost("Register")]
-        public async Task<IActionResult> RegisterNewUser([FromBody] DtoRegister user)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
 
-            Parent parent = new Parent
+            // ================= REGISTER =================
+            [HttpPost("Register")]
+            public async Task<IActionResult> RegisterNewUser([FromBody] DtoRegister user)
             {
-                Name = user.Name,
-                // مهم جدًا لـ Identity\
-                UserName = user.Email,
-                Email = user.Email,
-                Phone = user.Phone
-            };
+                if (!ModelState.IsValid)
+                {
+                    var modelErrors = ModelState.Values
+                        .SelectMany(v => v.Errors)
+                        .Select(e => e.ErrorMessage)
+                        .ToList();
 
-            var result = await _userManager.CreateAsync(parent, user.Password1);
+                    return BadRequest(new
+                    {
+                        message = "بيانات غير صحيحة",
+                        errors = modelErrors
+                    });
+                }
 
-            if (result.Succeeded)
-                return Ok("Success");
+                var parent = new Parent
+                {
+                    Name = user.Name,
+                    UserName = user.Email,
+                    Email = user.Email,
+                    Phone = user.Phone
+                };
 
-            foreach (var item in result.Errors)
-                ModelState.AddModelError("", item.Description);
+                var result = await _userManager.CreateAsync(parent, user.Password1);
 
-            return BadRequest(ModelState);
-        }
-        [HttpPost("Login")]
+                if (result.Succeeded)
+                {
+                    return Ok(new
+                    {
+                        message = "تم إنشاء الحساب بنجاح"
+                    });
+                }
+
+                var errors = result.Errors
+                    .Select(e => TranslateError(e.Description))
+                    .ToList();
+
+                return BadRequest(new
+                {
+                    message = "فشل إنشاء الحساب",
+                    errors
+                });
+            }
+
+            // ================= ERROR TRANSLATION =================
+            private string TranslateError(string error)
+            {
+                return error switch
+                {
+                    var e when e.Contains("Password") && e.Contains("non alphanumeric") =>
+                        "كلمة المرور يجب أن تحتوي على رمز مثل @ أو _",
+
+                    var e when e.Contains("digit") =>
+                        "كلمة المرور يجب أن تحتوي على رقم",
+
+                    var e when e.Contains("uppercase") =>
+                        "كلمة المرور يجب أن تحتوي على حرف كبير",
+
+                    var e when e.Contains("6 characters") =>
+                        "كلمة المرور يجب أن تكون 6 أحرف على الأقل",
+
+                    var e when e.Contains("Email") && e.Contains("already") =>
+                        "هذا البريد الإلكتروني مستخدم بالفعل",
+
+                    var e when e.Contains("User name") =>
+                        "اسم المستخدم مستخدم بالفعل",
+
+                    _ => error
+                };
+            }
+        
+    
+    [HttpPost("Login")]
         public async Task<IActionResult> Login([FromBody] DtoLogin login)
         {
 

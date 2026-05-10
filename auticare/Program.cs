@@ -72,20 +72,16 @@ builder.Services.AddAuthentication(options =>
 });
 #endregion
 
-#region CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("MyPolicy", policy =>
-    {
-        policy.WithOrigins(
-                "http://127.0.0.1:5500",
-                "http://localhost:5500"
-            )
+    options.AddPolicy("AllowAll",
+        policy => policy
+            .AllowAnyOrigin()
             .AllowAnyHeader()
-            .AllowAnyMethod();
-    });
+            .AllowAnyMethod());
 });
-#endregion
+
+
 
 #region CONTROLLERS
 builder.Services.AddControllers()
@@ -123,7 +119,7 @@ app.UseSwaggerUI();
 
 app.UseRouting();
 
-app.UseCors("MyPolicy");
+app.UseCors("AllowAll");
 
 app.UseAuthentication();
 app.UseAuthorization();

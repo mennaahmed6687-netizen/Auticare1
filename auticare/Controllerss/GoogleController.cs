@@ -26,7 +26,8 @@ namespace auticare.Controllerss
         [HttpGet("login-google")]
         public IActionResult LoginGoogle()
         {
-            var redirectUrl = Url.Action(nameof(GoogleResponse), "Google", null, Request.Scheme);
+            // Backend callback (Google يرجع هنا)
+            var redirectUrl = "https://auticare.runasp.net/api/auth/google-response";
 
             var properties = new AuthenticationProperties
             {
@@ -36,22 +37,22 @@ namespace auticare.Controllerss
             return Challenge(properties, "Google");
         }
 
-        // ================= CALLBACK =================
+        // ================= GOOGLE CALLBACK =================
         [HttpGet("google-response")]
         public async Task<IActionResult> GoogleResponse()
         {
             var result = await HttpContext.AuthenticateAsync(IdentityConstants.ExternalScheme);
 
             if (!result.Succeeded)
-                return Redirect("http://127.0.0.1:5500/log.html?error=google_failed");
+                return Redirect("https://auticare1.netlify.app/index.html?error=google_failed");
 
             var email = result.Principal.FindFirst(ClaimTypes.Email)?.Value;
             var name = result.Principal.FindFirst(ClaimTypes.Name)?.Value;
 
             if (string.IsNullOrEmpty(email))
-                return Redirect("http://127.0.0.1:5500/log.html?error=no_email");
+                return Redirect("https://auticare1.netlify.app/index.html?error=no_email");
 
-            // ================= USER =================
+            // ================= CHECK USER =================
             var user = await _userManager.FindByEmailAsync(email);
 
             if (user == null)
@@ -61,18 +62,16 @@ namespace auticare.Controllerss
                     UserName = email,
                     Email = email,
                     Name = name ?? email,
-
-                    // 🔥 حل مشكلة Phone NULL
                     Phone = "0000000000"
                 };
 
                 var createResult = await _userManager.CreateAsync(user);
 
                 if (!createResult.Succeeded)
-                    return Redirect("http://127.0.0.1:5500/log.html?error=create_failed");
+                    return Redirect("https://auticare1.netlify.app/index.html?error=create_failed");
             }
 
-            // ================= JWT =================
+            // ================= JWT TOKEN =================
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id),
@@ -96,9 +95,9 @@ namespace auticare.Controllerss
 
             var token = new JwtSecurityTokenHandler().WriteToken(jwt);
 
-            // ================= FINAL REDIRECT (FIXED) =================
+            // ================= FINAL REDIRECT TO FRONTEND =================
             return Redirect(
-                $"http://127.0.0.1:5500/index.html" +
+                $"https://auticare1.netlify.app/index.html" +
                 $"?token={token}&username={user.UserName}&parentId={user.Id}"
             );
         }
