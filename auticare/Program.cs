@@ -105,6 +105,7 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<Auticare.Services.Admin.IAdminService,
                            Auticare.Services.Admin.AdminService>();
+builder.Services.AddHostedService<ReminderService>();
 #endregion
 
 var app = builder.Build();

@@ -21,6 +21,8 @@ namespace auticare.core
 
         public DateTime Created { get; set; } = DateTime.Now;
         public virtual List<Childern>? children { get; set; } = new List<Childern>();
-        public virtual ProgressReport ProgressReport { get; set; }
+        public ICollection<ProgressReport> ProgressReports { get; set; }
+        = new List<ProgressReport>();
+        public ICollection<PushSubscriptionModel> PushSubscriptions { get; set; }
     }
 }

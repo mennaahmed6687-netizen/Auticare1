@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.Reflection;
+using System.Reflection.Emit;
 
 
 namespace Auticare.core
@@ -28,6 +29,8 @@ namespace Auticare.core
         public DbSet<AIResult> AIResults { get; set; }
         public DbSet<SpeechData> SpeechDatas { get; set; }
         public DbSet<LetterItem> LetterItems { get; set; }
+        public DbSet<PushSubscriptionModel> PushSubscriptions { get; set; }
+        public DbSet<Appointment> Appointments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
 
@@ -40,10 +43,7 @@ namespace Auticare.core
                 .HasKey(ca => new { ca.ChildId, ca.ActivityId });
 
             // 🔗 One-to-One
-            builder.Entity<Parent>()
-                .HasOne(p => p.ProgressReport)
-                .WithOne(pr => pr.Parent)
-                .HasForeignKey<ProgressReport>(pr => pr.ParentId);
+       
 
             // ✅ دعم اللغة العربية (بشكل آمن فقط للجداول الخاصة بك)
             builder.Entity<Childern>()
@@ -81,8 +81,10 @@ namespace Auticare.core
                     v => FromArabic(v)      // 👈 يرجع enum
                );
             builder.Entity<ProgressReport>()
-                .HasIndex(p => p.ParentId)
-                .IsUnique();
+       .HasOne(r => r.Parent)
+       .WithMany(p => p.ProgressReports)
+       .HasForeignKey(r => r.ParentId);
+
         }
 
 

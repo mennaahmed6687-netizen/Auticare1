@@ -4,6 +4,7 @@ using Auticare.core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace auticare.core.Migrations
 {
     [DbContext(typeof(AuticareDbContext))]
-    partial class AuticareDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260510110047_fixrelation")]
+    partial class fixrelation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -235,39 +238,6 @@ namespace auticare.core.Migrations
                     b.HasKey("ActivityId");
 
                     b.ToTable("Activities");
-                });
-
-            modelBuilder.Entity("auticare.core.Appointment", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("DateTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsNotified")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Location")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ParentId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ParentId");
-
-                    b.ToTable("Appointments");
                 });
 
             modelBuilder.Entity("auticare.core.Assessment", b =>
@@ -670,37 +640,6 @@ namespace auticare.core.Migrations
                     b.ToTable("ProgressReports");
                 });
 
-            modelBuilder.Entity("auticare.core.PushSubscriptionModel", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Auth")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Endpoint")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("P256dh")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ParentId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ParentId");
-
-                    b.ToTable("PushSubscriptions");
-                });
-
             modelBuilder.Entity("auticare.core.SpeechData", b =>
                 {
                     b.Property<int>("Id")
@@ -790,17 +729,6 @@ namespace auticare.core.Migrations
                         .HasForeignKey("ChildernChildId");
                 });
 
-            modelBuilder.Entity("auticare.core.Appointment", b =>
-                {
-                    b.HasOne("auticare.core.Parent", "Parent")
-                        .WithMany()
-                        .HasForeignKey("ParentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Parent");
-                });
-
             modelBuilder.Entity("auticare.core.Assessment", b =>
                 {
                     b.HasOne("auticare.core.Childern", "Child")
@@ -888,17 +816,6 @@ namespace auticare.core.Migrations
                     b.Navigation("Parent");
                 });
 
-            modelBuilder.Entity("auticare.core.PushSubscriptionModel", b =>
-                {
-                    b.HasOne("auticare.core.Parent", "Parent")
-                        .WithMany("PushSubscriptions")
-                        .HasForeignKey("ParentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Parent");
-                });
-
             modelBuilder.Entity("auticare.core.SpeechData", b =>
                 {
                     b.HasOne("auticare.core.Childern", null)
@@ -933,8 +850,6 @@ namespace auticare.core.Migrations
             modelBuilder.Entity("auticare.core.Parent", b =>
                 {
                     b.Navigation("ProgressReports");
-
-                    b.Navigation("PushSubscriptions");
 
                     b.Navigation("children");
                 });
