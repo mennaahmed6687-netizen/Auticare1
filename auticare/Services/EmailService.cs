@@ -11,7 +11,7 @@ namespace auticare.Services
             var email = new MimeMessage();
 
             // المرسل
-            email.From.Add(new MailboxAddress("Auticare App", "yourEmail@gmail.com"));
+            email.From.Add(new MailboxAddress("Auticare App", "Mennaahmed6687@gmail.com"));
 
             // المستقبل
             email.To.Add(MailboxAddress.Parse(to));

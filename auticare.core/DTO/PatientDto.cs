@@ -11,18 +11,14 @@
     public int A9 { get; set; }
     public int A10 { get; set; }
 
-    public int Age_Months { get; set; }
-    public int Sex { get; set; }
+    public float Age_Years { get; set; }
+    public string Sex { get; set; }
 
-    public int Social_Responsiveness_Scale { get; set; }
-    public int Qchat_10_Score { get; set; }
-    public int Speech_Delay_Language_Disorder { get; set; }
-    public int Learning_disorder { get; set; }
-    public int Genetic_Disorders { get; set; }
-    public int Depression { get; set; }
-    public int Global_developmental_delay_intellectual_disability { get; set; }
-    public int Social_Behavioural_Issues { get; set; }
-    public int Anxiety_disorder { get; set; }
-    public int Jaundice { get; set; }
-    public int Family_mem_with_ASD { get; set; }
+    public string Social_Responsiveness_Scale { get; set; }
+    public string Speech_Delay { get; set; }
+    public string Learning_disorder { get; set; }
+    public string Genetic_Disorders { get; set; }
+    public string Depression { get; set; }
+    public string Global_developmental_delay { get; set; }
+    public string Social_Behavioural_Issues { get; set; }
 }

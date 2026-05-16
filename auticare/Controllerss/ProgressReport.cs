@@ -1,4 +1,5 @@
-﻿using auticare.core;
+﻿
+using auticare.core;
 using auticare.core.DTO;
 using Auticare.core;
 using Microsoft.AspNetCore.Mvc;
@@ -86,7 +87,7 @@ public class ProgressReportController : ControllerBase
     }
 
 
-    
+
     // 📥 GET ALL REPORTS
     // ==================================================
     [HttpGet("all/{parentId}")]

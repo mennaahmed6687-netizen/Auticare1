@@ -27,7 +27,7 @@ namespace auticare.Controllerss
         public IActionResult LoginGoogle()
         {
             // Backend callback (Google يرجع هنا)
-            var redirectUrl = "https://auticare.runasp.net/api/auth/google-response";
+            var redirectUrl = Url.Action("GoogleResponse", "Google");
 
             var properties = new AuthenticationProperties
             {
@@ -44,13 +44,13 @@ namespace auticare.Controllerss
             var result = await HttpContext.AuthenticateAsync(IdentityConstants.ExternalScheme);
 
             if (!result.Succeeded)
-                return Redirect("https://auticare1.netlify.app/index.html?error=google_failed");
+                return Redirect("https://auticare1jj.netlify.app/index.html?error=google_failed");
 
             var email = result.Principal.FindFirst(ClaimTypes.Email)?.Value;
             var name = result.Principal.FindFirst(ClaimTypes.Name)?.Value;
 
             if (string.IsNullOrEmpty(email))
-                return Redirect("https://auticare1.netlify.app/index.html?error=no_email");
+                return Redirect("https://auticare1jj.netlify.app/index.html?error=no_email");
 
             // ================= CHECK USER =================
             var user = await _userManager.FindByEmailAsync(email);
@@ -68,7 +68,7 @@ namespace auticare.Controllerss
                 var createResult = await _userManager.CreateAsync(user);
 
                 if (!createResult.Succeeded)
-                    return Redirect("https://auticare1.netlify.app/index.html?error=create_failed");
+                    return Redirect("https://auticare1jj.netlify.app/index.html?error=create_failed");
             }
 
             // ================= JWT TOKEN =================
@@ -97,7 +97,7 @@ namespace auticare.Controllerss
 
             // ================= FINAL REDIRECT TO FRONTEND =================
             return Redirect(
-                $"https://auticare1.netlify.app/index.html" +
+                $"https://auticare1jj.netlify.app/index.html" +
                 $"?token={token}&username={user.UserName}&parentId={user.Id}"
             );
         }

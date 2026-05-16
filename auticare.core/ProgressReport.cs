@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Auticare.Core.Models.Admin;
+using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations;
 
 
@@ -22,20 +24,25 @@ public enum ReportType
 }
 namespace auticare.core
 {
- public class ProgressReport
-{
-    [Key]
-    public int Id { get; set; }
+    public class ProgressReport
+    {
+        [Key]
+        public int Id { get; set; }
 
-    public ReportType ProgressReportType { get; set; }
+        public ReportType ProgressReportType { get; set; }
 
-    public string? Description { get; set; }  // 👈 nullable
+        public string? Description { get; set; }  // 👈 nullable
 
-    public string? FilePath { get; set; }
+        public string? FilePath { get; set; }
 
-    public DateTime ReportDate { get; set; } = DateTime.Now;
+        public DateTime ReportDate { get; set; } = DateTime.Now;
 
-    public string ParentId { get; set; }
-    public Parent Parent { get; set; }
-}
+        public string ParentId { get; set; }
+        public Parent Parent { get; set; }
+
+
+
+        // Foreign Key
+
+    }
 }

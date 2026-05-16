@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Identity;
 using Auticare.Core.Models.Admin;
 using auticare.core;
 using Auticare.core;
+using auticare.Services;
+using System.Net;
 
 namespace Auticare.Services.Admin
 {
@@ -10,11 +12,13 @@ namespace Auticare.Services.Admin
     {
         private readonly AuticareDbContext _context;
         private readonly UserManager<Parent> _userManager;
+        private readonly EmailService _emailService;
 
-        public AdminService(AuticareDbContext context, UserManager<Parent> userManager)
+        public AdminService(AuticareDbContext context, UserManager<Parent> userManager, EmailService emailService)
         {
             _context = context;
             _userManager = userManager;
+            _emailService = emailService;
         }
 
         // Dashboard
@@ -103,7 +107,7 @@ namespace Auticare.Services.Admin
         // Parents Management
         public async Task<PagedResponse<AdminParent>> GetParentsAsync(ParentFilter filter)
         {
-            var query = _userManager.Users.AsQueryable();
+            var query = _context.Parents.AsQueryable();
 
             // Apply filters
             if (!string.IsNullOrEmpty(filter.Search))
@@ -129,6 +133,8 @@ namespace Auticare.Services.Admin
                     Email = parent.Email,
                     Phone = parent.Phone,
                     ChildrenCount = childrenCount,
+                    RegistrationDate = parent.Created,
+                    Created = parent.Created,
                     Status = "active"
                 });
             }
@@ -159,6 +165,8 @@ namespace Auticare.Services.Admin
                 Email = parent.Email,
                 Phone = parent.Phone,
                 ChildrenCount = children.Count,
+                RegistrationDate = parent.Created,
+                Created = parent.Created,
                 Status = "active"
             };
         }
@@ -174,6 +182,7 @@ namespace Auticare.Services.Admin
                 Email = dto.Email,
                 Name = dto.Name,
                 Phone = dto.Phone,
+                
                 Created = DateTime.Now
             };
 
@@ -190,6 +199,8 @@ namespace Auticare.Services.Admin
                 Email = user.Email,
                 Phone = user.Phone,
                 ChildrenCount = 0,
+                RegistrationDate = user.Created,
+                Created = user.Created,
                 Status = "active"
             };
         }
@@ -213,6 +224,8 @@ namespace Auticare.Services.Admin
                 Email = parent.Email,
                 Phone = parent.Phone,
                 ChildrenCount = childrenCount,
+                RegistrationDate = parent.Created,
+                Created = parent.Created,
                 Status = "active"
             };
         }
@@ -625,6 +638,12 @@ namespace Auticare.Services.Admin
 
         public async Task<AdminMessage> SendMessageAsync(CreateMessageDto dto)
         {
+            var recipientEmails = await GetMessageRecipientEmailsAsync(dto);
+            if (recipientEmails.Count == 0)
+            {
+                throw new Exception("No parent emails were found for this message.");
+            }
+
             // Create a simple message without database storage for now
             var message = new AdminMessage
             {
@@ -632,15 +651,52 @@ namespace Auticare.Services.Admin
                 Type = dto.Type,
                 Subject = dto.Subject,
                 Content = dto.Content,
-                Recipients = dto.ParentIds.ToList(),
+                Recipients = recipientEmails,
                 SentDate = DateTime.UtcNow,
                 Status = "sent"
             };
 
-            // TODO: Implement actual email sending logic here
-            // await _emailService.SendEmailAsync(dto.ParentIds, dto.Subject, dto.Content);
+            var safeBody = WebUtility.HtmlEncode(dto.Content).Replace("\n", "<br>");
+            foreach (var email in recipientEmails)
+            {
+                await _emailService.SendEmailAsync(email, dto.Subject, safeBody);
+            }
 
             return message;
+        }
+
+        private async Task<List<string>> GetMessageRecipientEmailsAsync(CreateMessageDto dto)
+        {
+            if (dto.SendToAll)
+            {
+                return await _context.Parents
+                    .Where(parent => parent.Email != null && parent.Email != "")
+                    .Select(parent => parent.Email!)
+                    .Distinct()
+                    .ToListAsync();
+            }
+
+            var recipientEmails = dto.RecipientEmails
+                .Where(email => !string.IsNullOrWhiteSpace(email))
+                .Select(email => email.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (recipientEmails.Count > 0)
+            {
+                return recipientEmails;
+            }
+
+            if (dto.ParentIds.Count == 0)
+            {
+                return new List<string>();
+            }
+
+            return await _context.Parents
+                .Where(parent => dto.ParentIds.Contains(parent.Id) && parent.Email != null && parent.Email != "")
+                .Select(parent => parent.Email!)
+                .Distinct()
+                .ToListAsync();
         }
     }
 }

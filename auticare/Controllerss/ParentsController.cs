@@ -27,6 +27,7 @@ public class ParentsController : ControllerBase
             UserName = name,
             Email = email,
             Phone = phone,
+            Created = DateTime.Now
         
         };
 

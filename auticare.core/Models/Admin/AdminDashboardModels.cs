@@ -38,6 +38,7 @@ namespace Auticare.Core.Models.Admin
         public string Phone { get; set; } = string.Empty;
         public string Governorate { get; set; } = string.Empty;
         public DateTime RegistrationDate { get; set; }
+        public DateTime Created { get; set; }
         public string Status { get; set; } = "active"; // active, inactive
         public string Notes { get; set; } = string.Empty;
         public int ChildrenCount { get; set; }
@@ -206,6 +207,8 @@ namespace Auticare.Core.Models.Admin
         [Required]
         public string Content { get; set; } = string.Empty;
         public List<string> ParentIds { get; set; } = new List<string>();
+        public List<string> RecipientEmails { get; set; } = new List<string>();
+        public bool SendToAll { get; set; }
         public int? ChildId { get; set; }
         public Dictionary<string, int> Scores { get; set; } = new Dictionary<string, int>();
     }

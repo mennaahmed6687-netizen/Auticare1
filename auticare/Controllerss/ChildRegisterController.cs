@@ -128,18 +128,26 @@ public class ChildRegisterController : ControllerBase
             })
         });
     }
-    [Authorize]
-    [HttpGet("my-child")]
-    public async Task<IActionResult> GetMyChild()
+   
+
+    [HttpGet("my-children")]
+    public async Task<IActionResult> GetMyChildren()
     {
         var parentId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        var child = await _context.Childerns
-            .FirstOrDefaultAsync(x => x.ParentId == parentId);
+        if (string.IsNullOrEmpty(parentId))
+            return Unauthorized();
 
-        if (child == null)
-            return NotFound();
-        return Ok(new
+        // 1️⃣ نجيب البيانات خام بدون أي switch
+        var children = await _context.Childerns
+            .Where(c => c.ParentId == parentId)
+            .ToListAsync();
+
+        if (children == null || children.Count == 0)
+            return Ok(new List<object>());
+
+        // 2️⃣ نحول بعد ما خرجنا من EF (هنا عادي switch)
+        var result = children.Select(child => new
         {
             child.ChildId,
             child.Name,
@@ -155,41 +163,54 @@ public class ChildRegisterController : ControllerBase
                 _ => "غير معروف"
             }
         });
+
+        return Ok(result);
     }
-    // ================= ADD SCORE =================
-    [HttpPost("add-score")]
-    public async Task<IActionResult> AddScore(int childId, int activityId, int score)
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetChildById(int id)
     {
-        var parentId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        // ================= GET PARENT ID =================
+        var parentId =
+            User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
         if (string.IsNullOrEmpty(parentId))
             return Unauthorized();
 
-        if (score < 0 || score > 100)
-            return BadRequest("Score must be between 0 and 100");
+        // ================= GET CHILD =================
+        var child = await _context.Childerns
 
-        var childExists = await _context.Childerns
-            .AnyAsync(c => c.ChildId == childId && c.ParentId == parentId);
+            .FirstOrDefaultAsync(c =>
 
-        if (!childExists)
-            return NotFound("Child not found");
+                c.ChildId == id &&
 
-        var activityExists = await _context.Activities
-            .AnyAsync(a => a.ActivityId == activityId);
+                c.ParentId == parentId
+            );
 
-        if (!activityExists)
-            return NotFound("Activity not found");
+        // ================= NOT FOUND =================
+        if (child == null)
+            return NotFound();
 
-        var childActivity = new Child_Activity
+        // ================= RETURN =================
+        return Ok(new
         {
-            ChildId = childId,
-            ActivityId = activityId,
-            Score = score
-        };
+            child.ChildId,
+            child.Name,
+            child.Age,
+            child.Gender,
 
-        _context.Child_Activities.Add(childActivity);
-        await _context.SaveChangesAsync();
+            Image = child.ImageName,
 
-        return Ok("Score added");
+            AutismLevel = child.Diagnosis_Level switch
+            {
+                DiagnosisLevel.Low => "منخفض",
+
+                DiagnosisLevel.Medium => "متوسط",
+
+                DiagnosisLevel.High => "مرتفع",
+
+                _ => "غير معروف"
+            }
+        });
     }
 }
